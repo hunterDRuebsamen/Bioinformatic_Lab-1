@@ -1,4 +1,4 @@
-# Chromosome, Start_location, End_Location, Methylation_rate, Start_depth, End_depth
+'chromosome', 's_loc', 'e_loc', 'methyl_rate', 's_depth', 'e_depth'
 7	3015880	3015880	81.8181818181818	18	4
 7	3016074	3016074	68.1818181818182	15	7
 7	3016118	3016118	0	0	22
