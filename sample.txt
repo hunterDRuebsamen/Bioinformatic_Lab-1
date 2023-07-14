@@ -1,3 +1,10 @@
+ 1   Chromosome: The identifier of the chromosome where the read is mapped.
+ 2   Start Position: The starting position of the read on the chromosome.
+ 3   End Position: The ending position of the read on the chromosome.
+ 4   Percent Coverage: The percentage of bases that are covered by the read at this location. This is calculated as the number of bases in the read that cover this location divided by the total number of bases at this location, multiplied by 100.
+ 5   Count of Covered Bases: The number of bases in the read that cover this location.
+ 6   Count of Uncovered Bases: The number of bases at this location that are not covered by the read.
+
 'chromosome', 's_loc', 'e_loc', 'methyl_rate', 's_depth', 'e_depth'
 7	3015880	3015880	81.8181818181818	18	4
 7	3016074	3016074	68.1818181818182	15	7
