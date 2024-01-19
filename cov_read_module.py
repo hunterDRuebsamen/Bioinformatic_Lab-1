@@ -6,13 +6,30 @@ import sys
 from typing import Tuple, List
 from tabulate import tabulate
 
+
 class cov_read():
+    """
+    A class to read, process, and analyze DNA methylation data from .cov.gz files.
+    """
+        
     pd.set_option('display.max_rows', None)
     directory = 'data/GSE93957_RAW/'
 
     sample_list = ["Lung", "Heart", "Liver", "Cortex"]
 
     def build_df(self, filename) -> pd.DataFrame:
+        '''                
+        build_df(filename: str) -> pd.DataFrame:
+        Reads a .cov.gz file and returns a DataFrame with methylation data.
+        
+        Parameters:
+            filename (str): The name of the .cov.gz file to be processed.
+        
+        Returns:
+            pd.DataFrame: A DataFrame with columns ['chromosome', 's_loc', 'e_loc',
+            'methyl_rate', 's_depth', 'e_depth', 'CG site'].
+        '''
+
         # Create empty DataFrame to be filled
         df = pd.DataFrame()
         columns_names = ['chromosome', 's_loc', 'e_loc', 'methyl_rate', 's_depth', 'e_depth']
@@ -41,6 +58,13 @@ class cov_read():
         return df
     
     def build_result(self, test = False):
+        '''
+        Processes all .cov.gz files in the directory and compiles a DataFrame
+        with summary results for each file.
+        
+        Parameters:
+            test (bool, optional): If True, process a test file. Defaults to False.
+        '''
         column_names = ['id', 'age', 'tissue', 'num_sites', 'ave depth', 'ave methylation', 'ave methylation > 2 depth', 'ave methylation > 5 depth']
         result = pd.DataFrame(columns=column_names)
         
