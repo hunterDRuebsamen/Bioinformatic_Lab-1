@@ -7,7 +7,7 @@ from typing import Tuple, List
 from tabulate import tabulate
 
 
-class cov_read():
+class Cov_Read():
     """
     A class to read, process, and analyze DNA methylation data from .cov.gz files.
     """
