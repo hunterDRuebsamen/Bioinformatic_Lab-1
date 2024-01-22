@@ -25,7 +25,7 @@ def read_setting_file(setting_file: str):
     df = pd.read_csv(setting_file)
     return df
 
-def read_sample_file(sample_file: str):
+def read_sample_file(sample_file: str, sample_directory: str):
     """
     Reads the 'Bismark coverage' .cov.gz file from the mouse tissue sample
 
@@ -63,14 +63,12 @@ def main():
                     prog='methyl_filter',
                     description='returns methylation level of locations in a specified range and chromosome')
     parser.add_argument('SampleFile')
+    parser.add_argument('SampleDirectory')
     parser.add_argument('SettingFile')
     args = parser.parse_args()
     
-    cov_df = read_sample_file(args.SampleFile)
+    cov_df = read_sample_file(args.SampleFile, args.SampleDirectory)
     settings_df = read_setting_file(args.SettingFile)
-
-    print(settings_df)
-    print(cov_df.head(20))
     
     for row in settings_df.itertuples(index=True, name='Pandas'):
         print(row)
