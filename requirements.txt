@@ -2,3 +2,4 @@ pandas
 matplotlib
 tabulate
 Bio
+scikit-learn
