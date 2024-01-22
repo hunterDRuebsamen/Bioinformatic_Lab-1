@@ -7,13 +7,15 @@ from typing import Tuple, List
 from tabulate import tabulate
 
 
-class Cov_Read():
+class Cov_Read:
     """
     A class to read, process, and analyze DNA methylation data from .cov.gz files.
     """
+    def __init__(self, directory: str):  
+        self.directory = directory  
         
     pd.set_option('display.max_rows', None)
-    directory = 'data/GSE93957_RAW/'
+    # directory = 'data/GSE93957_RAW/'
 
     sample_list = ["Lung", "Heart", "Liver", "Cortex"]
 
