@@ -11,15 +11,13 @@ class Cov_Read:
     """
     A class to read, process, and analyze DNA methylation data from .cov.gz files.
     """
-    def __init__(self, directory: str):  
-        self.directory = directory  
-        
+    
     pd.set_option('display.max_rows', None)
-    # directory = 'data/GSE93957_RAW/'
+   
 
     sample_list = ["Lung", "Heart", "Liver", "Cortex"]
 
-    def build_df(self, filename) -> pd.DataFrame:
+    def build_df(self, file_path) -> pd.DataFrame:
         '''                
         build_df(filename: str) -> pd.DataFrame:
         Reads a .cov.gz file and returns a DataFrame with methylation data.
@@ -36,7 +34,6 @@ class Cov_Read:
         df = pd.DataFrame()
         columns_names = ['chromosome', 's_loc', 'e_loc', 'methyl_rate', 's_depth', 'e_depth']
 
-        file_path = os.path.join(self.directory, filename)
         # Open the gzipped file in text mode
         with gzip.open(file_path, 'rt') as file:  
             print(file_path)
