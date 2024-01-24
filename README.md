@@ -5,9 +5,7 @@
 
   `Python3 Methyl_filter data_directory/mousefile.cov.gz input.csv`
 
-#### SettingFile format:
-
-Currently only accepts .csv files
+#### SettingFile format (*Currently only accepts .csv files*):
 
 gene_name | chromosome_number | start_location | end_location
 
