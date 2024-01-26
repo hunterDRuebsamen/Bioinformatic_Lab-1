@@ -38,7 +38,7 @@ def read_sample_file(sample_file_path: str):
     return reader.build_df(sample_file_path)
 
 
-def filter_dataframe(df: pd.DataFrame, chromosome: str, start_loc: int, end_loc: int) -> pd.DataFrame:
+def filter_dataframe(df: pd.DataFrame, name_str: str, chromosome: str, start_loc: int, end_loc: int) -> pd.DataFrame:
     """
     Returns a filtered DataFrame based on the chromosome and the inclusive range between start_loc and end_loc.
 
@@ -54,7 +54,19 @@ def filter_dataframe(df: pd.DataFrame, chromosome: str, start_loc: int, end_loc:
     # Apply the filter conditions, ensuring the range is inclusive
     filtered_df = df[(df['chromosome'] == str(chromosome)) &
                      (df['s_loc'] >= start_loc) &
-                     (df['s_loc'] <= end_loc)]
+                     (df['s_loc'] <= end_loc)].copy() # Use copy() to defined filtered_df as copy, not view and avoid SettingWithCopyWarning
+    
+    # Trim CG_Sites from file dump
+    filtered_df.drop(labels= 'CG site', axis=1, inplace= True)
+
+    # set name column equal to single value
+    filtered_df['name'] = name_str
+
+    column_order = ['name', 'chromosome', 's_loc', 'e_loc',
+                    'methyl rate', 'methylated reads', 'unmethylated reads']
+    
+    filtered_df = filtered_df[column_order]
+
     return filtered_df
 
 def main():
@@ -70,13 +82,15 @@ def main():
     settings_df = read_setting_file(args.SettingFile)
     
     for row in settings_df.itertuples(index=True, name='Pandas'):
-        # 'row' is a named tuple
+        name = row.name
         chromosome = str(row.chromosome)
         start_loc = int(row.start_loc)
         end_loc = int(row.end_loc)
 
-        with pd.option_context('display.max_rows', None, 'display.max_columns', None):
-            print(filter_dataframe(cov_df, chromosome, start_loc, end_loc))
+        filter_dataframe(cov_df, name, chromosome, start_loc, end_loc).to_csv(f'{name}_out', index=False, header=True)
+
+        # with pd.option_context('display.max_rows', None, 'display.max_columns', None):
+        #     print(filter_dataframe(cov_df, name, chromosome, start_loc, end_loc).to_csv(index=False, header=False))
 
 
 if __name__ == "__main__":
