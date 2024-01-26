@@ -59,6 +59,9 @@ def filter_dataframe(df: pd.DataFrame, name_str: str, chromosome: str, start_loc
     # Trim CG_Sites from file dump
     filtered_df.drop(labels= 'CG site', axis=1, inplace= True)
 
+    # TODO: change cov_read_module to simply not read past the first 2 digits rather than round here
+    filtered_df['methyl rate'] = filtered_df['methyl rate'].round(2)
+
     # set name column equal to single value
     filtered_df['name'] = name_str
 
@@ -87,7 +90,7 @@ def main():
         start_loc = int(row.start_loc)
         end_loc = int(row.end_loc)
 
-        filter_dataframe(cov_df, name, chromosome, start_loc, end_loc).to_csv(f'{name}_out', index=False, header=True)
+        filter_dataframe(cov_df, name, chromosome, start_loc, end_loc).to_csv(f'{name}_out.csv', index=False, header=True)
 
         # with pd.option_context('display.max_rows', None, 'display.max_columns', None):
         #     print(filter_dataframe(cov_df, name, chromosome, start_loc, end_loc).to_csv(index=False, header=False))
