@@ -17,7 +17,7 @@ class Cov_Read:
 
     sample_list = ["Lung", "Heart", "Liver", "Cortex"]
 
-    def build_df(self, file_path) -> pd.DataFrame:
+    def build_df(self, file_path, print_path = False) -> pd.DataFrame:
         '''                
         build_df(filename: str) -> pd.DataFrame:
         Reads a .cov.gz file and returns a DataFrame with methylation data.
@@ -27,16 +27,17 @@ class Cov_Read:
         
         Returns:
             pd.DataFrame: A DataFrame with columns ['chromosome', 's_loc', 'e_loc',
-            'methyl_rate', 's_depth', 'e_depth', 'CG site'].
+            'methyl rate', 'methylated_reads', 'unmethylated_reads', 'CG site'].
         '''
-
+        if print_path:
+            print(file_path)
+            
         # Create empty DataFrame to be filled
         df = pd.DataFrame()
-        columns_names = ['chromosome', 's_loc', 'e_loc', 'methyl_rate', 's_depth', 'e_depth']
+        columns_names = ['chromosome', 's_loc', 'e_loc', 'methyl rate', 'methylated reads', 'unmethylated reads']
 
         # Open the gzipped file in text mode
         with gzip.open(file_path, 'rt') as file:  
-            print(file_path)
             df = pd.read_csv(file_path, sep="\t", header=None, names=columns_names, low_memory=False)
 
             # Add Column for CG-Sites
@@ -67,7 +68,6 @@ class Cov_Read:
         column_names = ['id', 'age', 'tissue', 'num_sites', 'ave depth', 'ave methylation', 'ave methylation > 2 depth', 'ave methylation > 5 depth']
         result = pd.DataFrame(columns=column_names)
         
-        
         if not test:
             for filename in os.listdir(self.directory):
                 self._build_result_helper(filename, result)
@@ -80,17 +80,17 @@ class Cov_Read:
     def _build_result_helper(self, filename, result):
         df = self.build_df(filename)
         length = len(df)
-        depth = (df['s_depth'] + df['e_depth']).mean()
-        mean = df.loc[df['CG site'] == True, 'methyl_rate'].mean()
+        depth = (df['Methylated Reads'] + df['Unmethylated Reads']).mean()
+        mean = df.loc[df['cg_site'] == True, 'methyl rate'].mean()
         
         # Get the average methylation for rows with read_count >= 2 & read_count <= 100
-        df = df.drop(df[df['e_depth'] + df['s_depth'] < 2].index)
-        df = df.drop(df[df['e_depth'] + df['s_depth'] > 100].index)
-        two_depth_mean = df.loc[df['CG site'] == True, 'methyl_rate'].mean()
+        df = df.drop(df[df['unmethylated reads'] + df['methylated reads'] < 2].index)
+        df = df.drop(df[df['unmethylated reads'] + df['methylated reads'] > 100].index)
+        two_depth_mean = df.loc[df['cg_site'] == True, 'methyl rate'].mean()
 
         # Get the average methylation for rows with read_count >= 5 & read_count <= 100
-        df = df.drop(df[df['e_depth'] + df['s_depth'] < 5].index)
-        five_depth_mean = df.loc[df['CG site'] == True, 'methyl_rate'].mean()
+        df = df.drop(df[df['Unmethylated Reads'] + df['Methylated Reads'] < 5].index)
+        five_depth_mean = df.loc[df['cg_site'] == True, 'methyl rate'].mean()
 
         # Split the filename into id and age_sample
         splits = filename.split("_")
