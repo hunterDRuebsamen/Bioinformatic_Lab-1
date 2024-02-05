@@ -83,6 +83,9 @@ def main():
     
     cov_df = read_sample_file(args.SampleFilePath)
     settings_df = read_setting_file(args.SettingFile)
+
+    # Initialize an empty list to store filtered dataframes
+    filtered_dfs = []
     
     for row in settings_df.itertuples(index=True, name='Pandas'):
         name = row.name
@@ -90,11 +93,25 @@ def main():
         start_loc = int(row.start_loc)
         end_loc = int(row.end_loc)
 
-        filter_dataframe(cov_df, name, chromosome, start_loc, end_loc).to_csv(f'{name}_out.csv', index=False, header=True)
+        filtered_df = filter_dataframe(cov_df, name, chromosome, start_loc, end_loc)
+        filtered_dfs.append(filtered_df)
 
         # with pd.option_context('display.max_rows', None, 'display.max_columns', None):
         #     print(filter_dataframe(cov_df, name, chromosome, start_loc, end_loc).to_csv(index=False, header=False))
+    final_df = pd.concat(filtered_dfs, ignore_index=True)
+    final_df.to_csv('output.csv', index=False, header=True)
 
+    # Additional code for the new CSV
+    summary_df = final_df.groupby('name').agg({
+        's_loc': ['min', 'max'],
+        'methyl rate': 'mean'
+    }).reset_index()
+
+    # Flatten the MultiIndex columns
+    summary_df.columns = ['name', 's_loc', 'e_loc', 'average_methylation_rate']
+    
+    # Save the summary dataframe to a new CSV file
+    summary_df.to_csv('summary.csv', index=False, header=True)
 
 if __name__ == "__main__":
     main()
