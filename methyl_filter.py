@@ -56,16 +56,25 @@ def filter_dataframe(df: pd.DataFrame, name_str: str, chromosome: str, start_loc
     Returns:
     - pd.DataFrame: Filtered DataFrame.
     """
+
+    print(df.head())
+
     # Apply the filter conditions, ensuring the range is inclusive
     filtered_df = df[(df['chromosome'] == chromosome) &
                      (df['s_loc'] >= start_loc) &
                      (df['s_loc'] <= end_loc)].copy() # Use copy() to defined filtered_df as copy, not view and avoid SettingWithCopyWarning
     
+    print(filtered_df.head())
+
     # Trim CG_Sites column from file dump
     filtered_df.drop(labels= 'CG site', axis=1, inplace= True)
 
+    print(filtered_df.head())
+
     # TODO: change cov_read_module to simply not read past the first 2 digits rather than round here
     filtered_df['methyl rate'] = filtered_df['methyl rate'].round(2)
+
+    print(filtered_df.head())
 
     # set name column equal to single value
     filtered_df['name'] = name_str
@@ -92,37 +101,42 @@ def main():
 
     reader = Cov_Read()
 
+    # Initialize an empty list to store filtered dataframes
+    filtered_dfs = []
+
     '''
     For each region in the settings_file, 
     generate an output for each sample in the sample directory
     '''
-    for row in settings_df.itertuples(index=True, name='Pandas'):
-        name = row.name
-        chromosome = str(row.chromosome)
-        start_loc = int(row.start_loc)
-        end_loc = int(row.end_loc)
 
-        for idx, sample in enumerate(samples_directory):
-            final_path = f"{args.SampleDirectoryPath}/{sample}"
+    for idx, sample in enumerate(samples_directory):
+        final_path = f"test_samples/{sample}"
+        for row in settings_df.itertuples(index=True, name='Pandas'):
+            name = row.name
+            chromosome = str(row.chromosome)
+            start_loc = int(row.start_loc)
+            end_loc = int(row.end_loc)
+
             cov_df = reader.build_df(final_path)
-            filter_dataframe(cov_df, name, chromosome, start_loc, end_loc).to_csv(f'{name}_out_{idx+1}.csv', index=False, header=True)
+            filtered_df = filter_dataframe(cov_df, name, chromosome, start_loc, end_loc) # .to_csv(f'{sample}_out_{idx+1}.csv', index=False, header=True)
+            
+            filtered_dfs.append(filtered_df)
 
-        # with pd.option_context('display.max_rows', None, 'display.max_columns', None):
-        #     print(filter_dataframe(cov_df, name, chromosome, start_loc, end_loc).to_csv(index=False, header=False))
-    final_df = pd.concat(filtered_dfs, ignore_index=True)
-    final_df.to_csv('output.csv', index=False, header=True)
+        final_df = pd.concat(filtered_dfs, ignore_index=True)
+        final_df.to_csv(f'{sample}_{idx}.csv', index=False, header=True)
+        
 
-    # Additional code for the new CSV
-    summary_df = final_df.groupby('name').agg({
-        's_loc': ['min', 'max'],
-        'methyl rate': 'mean'
-    }).reset_index()
+        # Additional code for the new CSV
+        summary_df = final_df.groupby('name').agg({
+            's_loc': ['min', 'max'],
+            'methyl rate': 'mean'
+        }).reset_index()
 
-    # Flatten the MultiIndex columns
-    summary_df.columns = ['name', 's_loc', 'e_loc', 'average_methylation_rate']
-    
-    # Save the summary dataframe to a new CSV file
-    summary_df.to_csv('summary.csv', index=False, header=True)
+        # Flatten the MultiIndex columns
+        summary_df.columns = ['name', 's_loc', 'e_loc', 'average_methylation_rate']
+        
+        # Save the summary dataframe to a new CSV file
+        summary_df.to_csv(f'{sample}_summary_{idx}.csv', index=False, header=True)
 
 if __name__ == "__main__":
     main()
