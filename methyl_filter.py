@@ -109,7 +109,20 @@ def main():
 
         # with pd.option_context('display.max_rows', None, 'display.max_columns', None):
         #     print(filter_dataframe(cov_df, name, chromosome, start_loc, end_loc).to_csv(index=False, header=False))
+    final_df = pd.concat(filtered_dfs, ignore_index=True)
+    final_df.to_csv('output.csv', index=False, header=True)
 
+    # Additional code for the new CSV
+    summary_df = final_df.groupby('name').agg({
+        's_loc': ['min', 'max'],
+        'methyl rate': 'mean'
+    }).reset_index()
+
+    # Flatten the MultiIndex columns
+    summary_df.columns = ['name', 's_loc', 'e_loc', 'average_methylation_rate']
+    
+    # Save the summary dataframe to a new CSV file
+    summary_df.to_csv('summary.csv', index=False, header=True)
 
 if __name__ == "__main__":
     main()
