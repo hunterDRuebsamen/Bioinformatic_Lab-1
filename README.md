@@ -1,11 +1,13 @@
 # Bioinformatic_Lab-1
 
+Sample files must be stored in directory in order to be passed to methyl_filter.py
+
 #### Methyl_filter Tutorial:
-  Parameters: SampleFilePath, SettingFile.csv
+  Parameters: SampleFolderPath, SettingsFile.csv
 
-  `Python3 methyl_filter data_directory/mousefile.cov.gz input.csv`
+  `Python3 methyl_filter.py data_directory/mousefile.cov.gz input.csv`
 
-#### SettingFile format (*Currently only accepts .csv files*):
+#### SettingsFile format (*Currently only accepts .csv files*):
 
 gene_name | chromosome_number | start_location | end_location
 
