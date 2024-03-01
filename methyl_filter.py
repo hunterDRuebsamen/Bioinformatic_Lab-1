@@ -56,25 +56,16 @@ def filter_dataframe(df: pd.DataFrame, name_str: str, chromosome: str, start_loc
     Returns:
     - pd.DataFrame: Filtered DataFrame.
     """
-
-    print(df.head())
-
     # Apply the filter conditions, ensuring the range is inclusive
     filtered_df = df[(df['chromosome'] == chromosome) &
                      (df['s_loc'] >= start_loc) &
                      (df['s_loc'] <= end_loc)].copy() # Use copy() to defined filtered_df as copy, not view and avoid SettingWithCopyWarning
-    
-    print(filtered_df.head())
 
     # Trim CG_Sites column from file dump
     filtered_df.drop(labels= 'CG site', axis=1, inplace= True)
 
-    print(filtered_df.head())
-
     # TODO: change cov_read_module to simply not read past the first 2 digits rather than round here
     filtered_df['methyl rate'] = filtered_df['methyl rate'].round(2)
-
-    print(filtered_df.head())
 
     # set name column equal to single value
     filtered_df['name'] = name_str
@@ -110,7 +101,7 @@ def main():
     '''
 
     for idx, sample in enumerate(samples_directory):
-        final_path = f"test_samples/{sample}"
+        final_path = f"{args.SampleDirectoryPath}/{sample}"
         for row in settings_df.itertuples(index=True, name='Pandas'):
             name = row.name
             chromosome = str(row.chromosome)
