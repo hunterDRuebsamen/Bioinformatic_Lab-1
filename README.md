@@ -1,11 +1,12 @@
 # Bioinformatic_Lab-1
 
-Sample files must be stored in directory in order to be passed to methyl_filter.py
+Tissue sample files must be stored in directory in order to be passed to methyl_filter.py ie:
+  data_directory/mousefile.cov.gz
 
 #### Methyl_filter Tutorial:
   Parameters: SampleFolderPath, SettingsFile.csv
 
-  `Python3 methyl_filter.py data_directory/mousefile.cov.gz input.csv`
+  `Python3 methyl_filter.py data_directory settings.csv`
 
 #### SettingsFile format (*Currently only accepts .csv files*):
 
