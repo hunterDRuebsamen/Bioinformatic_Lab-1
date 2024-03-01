@@ -110,7 +110,7 @@ def main():
     '''
 
     for idx, sample in enumerate(samples_directory):
-        final_path = f"test_samples/{sample}"
+        final_path = f"{samples_directory}/{sample}"
         for row in settings_df.itertuples(index=True, name='Pandas'):
             name = row.name
             chromosome = str(row.chromosome)
