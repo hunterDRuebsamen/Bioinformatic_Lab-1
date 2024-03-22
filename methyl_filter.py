@@ -56,7 +56,6 @@ def filter_dataframe(df: pd.DataFrame, name_str: str, chromosome: str, start_loc
     Returns:
     - pd.DataFrame: Filtered DataFrame.
     """
-
     # Apply the filter conditions, ensuring the range is inclusive
     filtered_df = df[(df['chromosome'] == chromosome) &
                      (df['s_loc'] >= start_loc) &
@@ -115,7 +114,7 @@ def main():
             filtered_dfs.append(filtered_df)
 
         final_df = pd.concat(filtered_dfs, ignore_index=True)
-        final_df.to_csv(f'{sample}_{idx}.csv', index=False, header=True)
+        final_df.to_csv(f'{sample}_{idx+1}.csv', index=False, header=True)
         
 
         # Additional code for the new CSV
@@ -126,9 +125,9 @@ def main():
 
         # Flatten the MultiIndex columns
         summary_df.columns = ['name', 's_loc', 'e_loc', 'average_methylation_rate']
-        
+        summary_df["average_methylation_rate"] = summary_df["average_methylation_rate"].round(2)
         # Save the summary dataframe to a new CSV file
-        summary_df.to_csv(f'{sample}_summary_{idx}.csv', index=False, header=True)
+        summary_df.to_csv(f'{sample}_summary_{idx+1}.csv', index=False, header=True)
 
 if __name__ == "__main__":
     main()
