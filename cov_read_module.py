@@ -5,6 +5,7 @@ import numpy as np
 import sys
 from typing import Tuple, List
 from tabulate import tabulate
+import cudf
 
 
 class Cov_Read:
@@ -12,34 +13,33 @@ class Cov_Read:
     A class to read, process, and analyze DNA methylation data from .cov.gz files.
     """
     
-    pd.set_option('display.max_rows', None)
+    # cudf.set_option('display.max_rows', None)
    
 
     sample_list = ["Lung", "Heart", "Liver", "Cortex"]
 
-    def build_df(self, file_path: str, print_path: bool = False, CG_site = False) -> pd.DataFrame:
+    def build_df(self, file_path: str, print_path: bool = False, CG_site = False) -> cudf.DataFrame:
         '''                
-        build_df(filename: str) -> pd.DataFrame:
+        build_df(filename: str) -> cudf.DataFrame:
         Reads a .cov.gz file and returns a DataFrame with methylation data.
         
         Parameters:
             filename (str): The name of the .cov.gz file to be processed.
         
         Returns:
-            pd.DataFrame: A DataFrame with columns ['chromosome', 's_loc', 'e_loc',
+            cudf.DataFrame: A DataFrame with columns ['chromosome', 's_loc', 'e_loc',
             'methyl rate', 'methylated_reads', 'unmethylated_reads', 'CG site'].
         '''
         if print_path:
             print(file_path)
             
         # Create empty DataFrame to be filled
-        df = pd.DataFrame()
+        df = cudf.DataFrame()
         columns_names = ['chromosome', 's_loc', 'e_loc', 'methyl rate', 'methylated reads', 'unmethylated reads']
 
         # Open the gzipped file in text mode
         with gzip.open(file_path, 'rt') as file:  
-            df = pd.read_csv(file_path, sep="\t", header=None, names=columns_names, low_memory=False)
-
+            df = cudf.read_csv(file_path, sep="\t", header=None, names=columns_names)
             # Add Column for CG-Sites
             if CG_site:
                 loc_list = df['s_loc'].tolist()
@@ -68,7 +68,7 @@ class Cov_Read:
             test (bool, optional): If True, process a test file. Defaults to False.
         '''
         column_names = ['id', 'age', 'tissue', 'num_sites', 'ave depth', 'ave methylation', 'ave methylation > 2 depth', 'ave methylation > 5 depth']
-        result = pd.DataFrame(columns=column_names)
+        result = cudf.DataFrame(columns=column_names)
         
         if not test:
             for filename in os.listdir(directory):

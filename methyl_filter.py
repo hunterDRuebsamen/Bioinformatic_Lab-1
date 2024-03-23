@@ -1,3 +1,4 @@
+
 import gzip
 import os
 import pandas as pd
@@ -9,6 +10,7 @@ from typing import Tuple, List
 from cov_read_module import Cov_Read
 from numba import njit
 import time
+import cudf
 
 
 # cov_reader = cov_read()
@@ -22,10 +24,10 @@ def read_setting_file(setting_file: str):
     Reads the Genome Feature chromosome, start location, and end location from setting_file 
 
     Returns:
-    - pd.DataFrame: Genome Feature locations
+    - cudf.DataFrame: Genome Feature locations
     """
 
-    df = pd.read_csv(setting_file)
+    df = cudf.read_csv(setting_file)
     return df
 
 def read_sample_file(sample_file_path: str):
@@ -33,7 +35,7 @@ def read_sample_file(sample_file_path: str):
     Reads the 'Bismark coverage' .cov.gz file from the mouse tissue sample
 
     Returns:
-    - df (pd.DataFrame): methylation data for mouse tissue sample
+    - df (cudf.DataFrame): methylation data for mouse tissue sample
     """
     sample_files = []
     for filename in os.listdir(sample_file_path):    
@@ -44,18 +46,18 @@ def read_sample_file(sample_file_path: str):
     # reader = Cov_Read()
     # return reader.build_df(sample_file_path)
 
-def filter_dataframe(df: pd.DataFrame, name_str: str, chromosome: str, start_loc: int, end_loc: int) -> pd.DataFrame:
+def filter_dataframe(df: cudf.DataFrame, name_str: str, chromosome: str, start_loc: int, end_loc: int) -> cudf.DataFrame:
     """
     Returns a filtered DataFrame based on the chromosome and the inclusive range between start_loc and end_loc.
 
     Parameters:
-    - df (pd.DataFrame): The DataFrame to filter.
+    - df (cudf.DataFrame): The DataFrame to filter.
     - chromosome (int): The chromosome number to filter by.
     - start_loc (int): The inclusive starting location to filter by.
     - end_loc (int): The inclusive ending location to filter by.
 
     Returns:
-    - pd.DataFrame: Filtered DataFrame.
+    - cudf.DataFrame: Filtered DataFrame.
     """
 
     # TODO: change cov_read_module to simply not read past the first 2 digits rather than round here
@@ -78,7 +80,7 @@ def filter_dataframe(df: pd.DataFrame, name_str: str, chromosome: str, start_loc
     return df
 
 
-def filter_dataframe2(df: pd.DataFrame, name_str: str, chromosome: str, start_loc: int, end_loc: int) -> pd.DataFrame:
+def filter_dataframe2(df: cudf.DataFrame, name_str: str, chromosome: str, start_loc: int, end_loc: int) -> cudf.DataFrame:
     """
     Returns a filtered DataFrame based on the chromosome and the inclusive range between start_loc and end_loc.
     """
@@ -128,7 +130,7 @@ def main():
         cov_df = reader.build_df(final_path)
         settings_length = len(settings_df)
         counter = 0
-        for row in settings_df.itertuples(index=True, name='Pandas'):
+        for row in settings_df.to_pandas().itertuples(index=True, name='Pandas'):
             
             name = row.name
             # chromosome = str(row.chromosome)
@@ -140,7 +142,7 @@ def main():
             counter += 1
             print(f"iteration: {counter}/{settings_length}")
 
-        final_df = pd.concat(filtered_dfs, ignore_index=True)
+        final_df = cudf.concat(filtered_dfs, ignore_index=True)
         final_df.to_csv(f'{sample}_{idx+1}.csv', index=False, header=True)
         
 
