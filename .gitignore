@@ -163,3 +163,5 @@ cython_debug/
 # Ignore 'Data' Directory
 data/
 reference_genome/
+1_wk_samples/
+test_folder/

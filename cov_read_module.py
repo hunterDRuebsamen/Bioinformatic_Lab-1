@@ -17,7 +17,7 @@ class Cov_Read:
 
     sample_list = ["Lung", "Heart", "Liver", "Cortex"]
 
-    def build_df(self, file_path: str, print_path: bool = False) -> pd.DataFrame:
+    def build_df(self, file_path: str, print_path: bool = False, CG_site = False) -> pd.DataFrame:
         '''                
         build_df(filename: str) -> pd.DataFrame:
         Reads a .cov.gz file and returns a DataFrame with methylation data.
@@ -41,19 +41,20 @@ class Cov_Read:
             df = pd.read_csv(file_path, sep="\t", header=None, names=columns_names, low_memory=False)
 
             # Add Column for CG-Sites
-            loc_list = df['s_loc'].tolist()
-            cg_list = []
-            for idx in range(len(loc_list)):
-                # check if index isn't the last value, and check if next methylated read is sequential to current index
-                if idx < len(loc_list)-1 and (loc_list[idx] == loc_list[idx+1]-1):
-                    cg_list.append(True)
-                # check if index isn't the first value, and check if the previous methylated read is sequential to current index
-                elif idx > 0 and (loc_list[idx] == loc_list[idx-1]+1):
-                    cg_list.append(True)
-                # Append false otherwise
-                else:
-                    cg_list.append(False)
-            df['CG site'] = cg_list
+            if CG_site:
+                loc_list = df['s_loc'].tolist()
+                cg_list = []
+                for idx in range(len(loc_list)):
+                    # check if index isn't the last value, and check if next methylated read is sequential to current index
+                    if idx < len(loc_list)-1 and (loc_list[idx] == loc_list[idx+1]-1):
+                        cg_list.append(True)
+                    # check if index isn't the first value, and check if the previous methylated read is sequential to current index
+                    elif idx > 0 and (loc_list[idx] == loc_list[idx-1]+1):
+                        cg_list.append(True)
+                    # Append false otherwise
+                    else:
+                        cg_list.append(False)
+                df['CG site'] = cg_list
 
         return df
     
