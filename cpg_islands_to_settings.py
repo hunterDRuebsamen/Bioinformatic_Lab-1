@@ -21,5 +21,9 @@ df = df[['name', 'chromosome', 'start_loc', 'end_loc']]
 # Removing the "chr" from the start of every entry in the chromosome column
 df['chromosome'] = df['chromosome'].str.replace('chr', '')
 
+df['name'] = df.apply(lambda row: f"{row.name}-{row['name']}", axis=1)
+
 
 df.to_csv('CpgIsland-GRCm39-settings.txt', index=False)
+
+print("Saved CpgIsland-GRCm39-settings.txt to file")

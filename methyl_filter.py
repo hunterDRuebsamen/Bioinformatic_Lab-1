@@ -46,41 +46,8 @@ def read_sample_file(sample_file_path: str):
     # reader = Cov_Read()
     # return reader.build_df(sample_file_path)
 
+
 def filter_dataframe(df: cudf.DataFrame, name_str: str, chromosome: str, start_loc: int, end_loc: int) -> cudf.DataFrame:
-    """
-    Returns a filtered DataFrame based on the chromosome and the inclusive range between start_loc and end_loc.
-
-    Parameters:
-    - df (cudf.DataFrame): The DataFrame to filter.
-    - chromosome (int): The chromosome number to filter by.
-    - start_loc (int): The inclusive starting location to filter by.
-    - end_loc (int): The inclusive ending location to filter by.
-
-    Returns:
-    - cudf.DataFrame: Filtered DataFrame.
-    """
-
-    # TODO: change cov_read_module to simply not read past the first 2 digits rather than round here
-    df['methyl rate'] = df['methyl rate'].round(2)
-
-    # set name column equal to single value
-    df['name'] = name_str
-
-    # Apply the filter conditions, ensuring the range is inclusive
-    df = df[(df['chromosome'] == chromosome) &
-                     (df['s_loc'] >= start_loc) &
-                     (df['s_loc'] <= end_loc)] # Use copy() to defined filtered_df as copy, not view and avoid SettingWithCopyWarning
-
- 
-    column_order = ['name', 'chromosome', 's_loc', 'e_loc',
-                    'methyl rate', 'methylated reads', 'unmethylated reads']
-    
-    df = df[column_order]
-
-    return df
-
-
-def filter_dataframe2(df: cudf.DataFrame, name_str: str, chromosome: str, start_loc: int, end_loc: int) -> cudf.DataFrame:
     """
     Returns a filtered DataFrame based on the chromosome and the inclusive range between start_loc and end_loc.
     """
@@ -133,11 +100,7 @@ def main():
         for row in settings_df.to_pandas().itertuples(index=True, name='Pandas'):
             
             name = row.name
-            # chromosome = str(row.chromosome)
-            # start_loc = int(row.start_loc)
-            # end_loc = int(row.end_loc)
-            # filtered_df = filter_dataframe(cov_df, name, row.chromosome, row.start_loc, row.end_loc) # .to_csv(f'{sample}_out_{idx+1}.csv', index=False, header=True)
-            filtered_df = filter_dataframe2(cov_df, name, row.chromosome, row.start_loc, row.end_loc) # .to_csv(f'{sample}_out_{idx+1}.csv', index=False, header=True)
+            filtered_df = filter_dataframe(cov_df, name, row.chromosome, row.start_loc, row.end_loc) # .to_csv(f'{sample}_out_{idx+1}.csv', index=False, header=True)
             filtered_dfs.append(filtered_df)
             counter += 1
             print(f"iteration: {counter}/{settings_length}")
