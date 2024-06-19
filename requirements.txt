@@ -3,3 +3,4 @@ matplotlib
 tabulate
 Bio
 scikit-learn
+cudf
