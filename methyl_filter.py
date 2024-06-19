@@ -1,3 +1,4 @@
+
 import gzip
 import os
 import pandas as pd
@@ -7,6 +8,9 @@ import argparse
 from tabulate import tabulate
 from typing import Tuple, List
 from cov_read_module import Cov_Read
+from numba import njit
+import time
+import cudf
 
 
 # cov_reader = cov_read()
@@ -20,10 +24,10 @@ def read_setting_file(setting_file: str):
     Reads the Genome Feature chromosome, start location, and end location from setting_file 
 
     Returns:
-    - pd.DataFrame: Genome Feature locations
+    - cudf.DataFrame: Genome Feature locations
     """
 
-    df = pd.read_csv(setting_file)
+    df = cudf.read_csv(setting_file)
     return df
 
 def read_sample_file(sample_file_path: str):
@@ -31,7 +35,7 @@ def read_sample_file(sample_file_path: str):
     Reads the 'Bismark coverage' .cov.gz file from the mouse tissue sample
 
     Returns:
-    - df (pd.DataFrame): methylation data for mouse tissue sample
+    - df (cudf.DataFrame): methylation data for mouse tissue sample
     """
     sample_files = []
     for filename in os.listdir(sample_file_path):    
@@ -43,39 +47,23 @@ def read_sample_file(sample_file_path: str):
     # return reader.build_df(sample_file_path)
 
 
-def filter_dataframe(df: pd.DataFrame, name_str: str, chromosome: str, start_loc: int, end_loc: int) -> pd.DataFrame:
+def filter_dataframe(df: cudf.DataFrame, name_str: str, chromosome: str, start_loc: int, end_loc: int) -> cudf.DataFrame:
     """
     Returns a filtered DataFrame based on the chromosome and the inclusive range between start_loc and end_loc.
-
-    Parameters:
-    - df (pd.DataFrame): The DataFrame to filter.
-    - chromosome (int): The chromosome number to filter by.
-    - start_loc (int): The inclusive starting location to filter by.
-    - end_loc (int): The inclusive ending location to filter by.
-
-    Returns:
-    - pd.DataFrame: Filtered DataFrame.
     """
-    # Apply the filter conditions, ensuring the range is inclusive
+
+    # Work with a filtered copy of the DataFrame
     filtered_df = df[(df['chromosome'] == chromosome) &
                      (df['s_loc'] >= start_loc) &
-                     (df['s_loc'] <= end_loc)].copy() # Use copy() to defined filtered_df as copy, not view and avoid SettingWithCopyWarning
+                     (df['s_loc'] <= end_loc)].copy()
 
-    # Trim CG_Sites column from file dump
-    filtered_df.drop(labels= 'CG site', axis=1, inplace= True)
-
-    # TODO: change cov_read_module to simply not read past the first 2 digits rather than round here
+    # Modify the copy
     filtered_df['methyl rate'] = filtered_df['methyl rate'].round(2)
-
-    # set name column equal to single value
     filtered_df['name'] = name_str
- 
-    column_order = ['name', 'chromosome', 's_loc', 'e_loc',
-                    'methyl rate', 'methylated reads', 'unmethylated reads']
-    
-    filtered_df = filtered_df[column_order]
 
-    return filtered_df
+    column_order = ['name', 'chromosome', 's_loc', 'e_loc', 'methyl rate', 'methylated reads', 'unmethylated reads']
+    return filtered_df[column_order]
+
 
 def main():
     # Create argument parser for Setting and Sample file
@@ -99,21 +87,25 @@ def main():
     For each region in the settings_file, 
     generate an output for each sample in the sample directory
     '''
-
+    start_time = time.perf_counter()
     for idx, sample in enumerate(samples_directory):
         final_path = f"{args.SampleDirectoryPath}/{sample}"
-        for row in settings_df.itertuples(index=True, name='Pandas'):
-            name = row.name
-            chromosome = str(row.chromosome)
-            start_loc = int(row.start_loc)
-            end_loc = int(row.end_loc)
+        settings_df["chromosome"] = settings_df["chromosome"].astype(str)
+        settings_df["start_loc"] = settings_df["start_loc"].astype(int)
+        settings_df["end_loc"] = settings_df["end_loc"].astype(int)
 
-            cov_df = reader.build_df(final_path)
-            filtered_df = filter_dataframe(cov_df, name, chromosome, start_loc, end_loc) # .to_csv(f'{sample}_out_{idx+1}.csv', index=False, header=True)
+        cov_df = reader.build_df(final_path)
+        settings_length = len(settings_df)
+        counter = 0
+        for row in settings_df.to_pandas().itertuples(index=True, name='Pandas'):
             
+            name = row.name
+            filtered_df = filter_dataframe(cov_df, name, row.chromosome, row.start_loc, row.end_loc) # .to_csv(f'{sample}_out_{idx+1}.csv', index=False, header=True)
             filtered_dfs.append(filtered_df)
+            counter += 1
+            print(f"iteration: {counter}/{settings_length}")
 
-        final_df = pd.concat(filtered_dfs, ignore_index=True)
+        final_df = cudf.concat(filtered_dfs, ignore_index=True)
         final_df.to_csv(f'{sample}_{idx+1}.csv', index=False, header=True)
         
 
@@ -128,6 +120,7 @@ def main():
         summary_df["average_methylation_rate"] = summary_df["average_methylation_rate"].round(2)
         # Save the summary dataframe to a new CSV file
         summary_df.to_csv(f'{sample}_summary_{idx+1}.csv', index=False, header=True)
+        print(f"Time elapsed: {(time.perf_counter()-start_time):.3f}s")
 
 if __name__ == "__main__":
     main()
