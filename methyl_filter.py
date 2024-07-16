@@ -8,7 +8,6 @@ import argparse
 from tabulate import tabulate
 from typing import Tuple, List
 from cov_read_module import Cov_Read
-from numba import njit
 import time
 import cudf
 
@@ -59,9 +58,9 @@ def filter_dataframe(df: cudf.DataFrame, name_str: str, chromosome: str, start_l
 
     # Modify the copy
     filtered_df['methyl rate'] = filtered_df['methyl rate'].round(2)
-    filtered_df['name'] = name_str
+    filtered_df['probe'] = name_str
 
-    column_order = ['name', 'chromosome', 's_loc', 'e_loc', 'methyl rate', 'methylated reads', 'unmethylated reads']
+    column_order = ['probe', 'chromosome', 's_loc', 'e_loc', 'methyl rate', 'methylated reads', 'unmethylated reads']
     return filtered_df[column_order]
 
 
@@ -80,9 +79,7 @@ def main():
 
     reader = Cov_Read()
 
-    # Initialize an empty list to store filtered dataframes
-    filtered_dfs = []
-
+    
     '''
     For each region in the settings_file, 
     generate an output for each sample in the sample directory
@@ -94,33 +91,37 @@ def main():
         settings_df["start_loc"] = settings_df["start_loc"].astype(int)
         settings_df["end_loc"] = settings_df["end_loc"].astype(int)
 
+        # Initialize an empty list to store filtered dataframes
+        filtered_dfs = []
+
+
         cov_df = reader.build_df(final_path)
         settings_length = len(settings_df)
         counter = 0
         for row in settings_df.to_pandas().itertuples(index=True, name='Pandas'):
             
-            name = row.name
-            filtered_df = filter_dataframe(cov_df, name, row.chromosome, row.start_loc, row.end_loc) # .to_csv(f'{sample}_out_{idx+1}.csv', index=False, header=True)
+            probe = row.name
+            filtered_df = filter_dataframe(cov_df, probe, row.chromosome, row.start_loc, row.end_loc) # .to_csv(f'{sample}_out_{idx+1}.csv', index=False, header=True)
             filtered_dfs.append(filtered_df)
             counter += 1
             print(f"iteration: {counter}/{settings_length}")
 
         final_df = cudf.concat(filtered_dfs, ignore_index=True)
         final_df.to_csv(f'{sample}_{idx+1}.csv', index=False, header=True)
-        
 
         # Additional code for the new CSV
-        summary_df = final_df.groupby('name').agg({
+        summary_df = final_df.groupby(['probe', 'chromosome']).agg({
             's_loc': ['min', 'max'],
             'methyl rate': 'mean'
         }).reset_index()
+        print(summary_df.tail())
 
         # Flatten the MultiIndex columns
-        summary_df.columns = ['name', 's_loc', 'e_loc', 'average_methylation_rate']
+        summary_df.columns = ['probe', 'chromosome', 's_loc', 'e_loc', 'average_methylation_rate']
         summary_df["average_methylation_rate"] = summary_df["average_methylation_rate"].round(2)
         # Save the summary dataframe to a new CSV file
         summary_df.to_csv(f'{sample}_summary_{idx+1}.csv', index=False, header=True)
-        print(f"Time elapsed: {(time.perf_counter()-start_time):.3f}s")
+        # print(f"Time elapsed: {(time.perf_counter()-start_time):.3f}s")
 
 if __name__ == "__main__":
     main()
